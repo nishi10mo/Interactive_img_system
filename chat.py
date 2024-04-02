@@ -807,81 +807,81 @@ class ImageEditing:
         return updated_image_path
 
 
-class Imagic:
-    def __init__(self, device):
-        print(f"Initializing Imagic to {device}")
-        self.device = device
+# class Imagic:
+#     def __init__(self, device):
+#         print(f"Initializing Imagic to {device}")
+#         self.device = device
     
-    @prompts(name="Imagic",
-             description="useful when you want to change the pose of the living things in the photo. "
-                         "like: make the dog sit, or make the cat jump. "
-                         "The input to this tool should be a comma separated string of two. "
-                         "representing the image_path and the text. ")
+#     @prompts(name="Imagic",
+#              description="useful when you want to change the pose of the living things in the photo. "
+#                          "like: make the dog sit, or make the cat jump. "
+#                          "The input to this tool should be a comma separated string of two. "
+#                          "representing the image_path and the text. ")
 
-    def inference(self, inputs):
-        image_path, text = inputs.split(",")[0], ','.join(inputs.split(',')[1:])
-        updated_image_path = get_new_image_name(image_path, func_name="imagic")
+#     def inference(self, inputs):
+#         image_path, text = inputs.split(",")[0], ','.join(inputs.split(',')[1:])
+#         updated_image_path = get_new_image_name(image_path, func_name="imagic")
 
-        print("===>Starting Imagic Training")
-        command = [
-            "accelerate", "launch", "train_imagic.py",
-            "--pretrained_model_name_or_path=CompVis/stable-diffusion-v1-4",
-            "--output_dir=stable_diffusion_weights/imagic",
-            "--input_image=" + image_path,
-            "--target_text=" + text,
-            "--seed=3434554",
-            "--resolution=256",
-            "--mixed_precision=fp16",
-            "--use_8bit_adam",
-            "--gradient_accumulation_steps=1",
-            "--emb_learning_rate=1e-3",
-            "--learning_rate=1e-6",
-            "--emb_train_steps=500",
-            "--max_train_steps=1000",
-            "--gradient_checkpointing"
-        ]
+#         print("===>Starting Imagic Training")
+#         command = [
+#             "accelerate", "launch", "train_imagic.py",
+#             "--pretrained_model_name_or_path=CompVis/stable-diffusion-v1-4",
+#             "--output_dir=stable_diffusion_weights/imagic",
+#             "--input_image=" + image_path,
+#             "--target_text=" + text,
+#             "--seed=3434554",
+#             "--resolution=256",
+#             "--mixed_precision=fp16",
+#             "--use_8bit_adam",
+#             "--gradient_accumulation_steps=1",
+#             "--emb_learning_rate=1e-3",
+#             "--learning_rate=1e-6",
+#             "--emb_train_steps=500",
+#             "--max_train_steps=1000",
+#             "--gradient_checkpointing"
+#         ]
 
-        subprocess.run(command)
+#         subprocess.run(command)
 
 
-        print("===>Starting Imagic Inference")
+#         print("===>Starting Imagic Inference")
 
-        model_path = "stable_diffusion_weights/imagic"
+#         model_path = "stable_diffusion_weights/imagic"
 
-        scheduler = DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False, set_alpha_to_one=False)
-        pipe = StableDiffusionPipeline.from_pretrained(model_path, scheduler=scheduler, torch_dtype=torch.float16).to("cuda")
-        target_embeddings = torch.load(os.path.join(model_path, "target_embeddings.pt")).to("cuda")
-        optimized_embeddings = torch.load(os.path.join(model_path, "optimized_embeddings.pt")).to("cuda")
-        g_cuda = torch.Generator(device="cuda")
-        seed = 1234
-        g_cuda.manual_seed(seed)
+#         scheduler = DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False, set_alpha_to_one=False)
+#         pipe = StableDiffusionPipeline.from_pretrained(model_path, scheduler=scheduler, torch_dtype=torch.float16).to("cuda")
+#         target_embeddings = torch.load(os.path.join(model_path, "target_embeddings.pt")).to("cuda")
+#         optimized_embeddings = torch.load(os.path.join(model_path, "optimized_embeddings.pt")).to("cuda")
+#         g_cuda = torch.Generator(device="cuda")
+#         seed = 1234
+#         g_cuda.manual_seed(seed)
 
-        alpha = 0.9
-        num_samples = 4
-        guidance_scale = 3
-        num_inference_steps = 50
-        height = 256
-        width = 256
+#         alpha = 0.9
+#         num_samples = 4
+#         guidance_scale = 3
+#         num_inference_steps = 50
+#         height = 256
+#         width = 256
 
-        edit_embeddings = alpha*target_embeddings + (1-alpha)*optimized_embeddings
+#         edit_embeddings = alpha*target_embeddings + (1-alpha)*optimized_embeddings
 
-        with autocast("cuda"), torch.inference_mode():
-            images = pipe(
-                prompt_embeds=edit_embeddings,
-                height=height,
-                width=width,
-                num_images_per_prompt=num_samples,
-                num_inference_steps=num_inference_steps,
-                guidance_scale=guidance_scale,
-                generator=g_cuda
-            ).images
+#         with autocast("cuda"), torch.inference_mode():
+#             images = pipe(
+#                 prompt_embeds=edit_embeddings,
+#                 height=height,
+#                 width=width,
+#                 num_images_per_prompt=num_samples,
+#                 num_inference_steps=num_inference_steps,
+#                 guidance_scale=guidance_scale,
+#                 generator=g_cuda
+#             ).images
 
-        for img in images:
-            img.save(updated_image_path)
+#         for img in images:
+#             img.save(updated_image_path)
         
-        print(f"\nProcessed Imagic, Input Image: {image_path}, Instruct Text: {text}, "
-              f"Output Image: {updated_image_path}")
-        return updated_image_path
+#         print(f"\nProcessed Imagic, Input Image: {image_path}, Instruct Text: {text}, "
+#               f"Output Image: {updated_image_path}")
+#         return updated_image_path
 
 
 class ConversationBot:
