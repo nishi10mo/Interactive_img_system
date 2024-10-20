@@ -873,14 +873,9 @@ class ConversationBot:
 
     def init_agent(self, lang):
         self.memory.clear() #clear previous history
-        if lang=='English':
-            PREFIX, FORMAT_INSTRUCTIONS, SUFFIX = VISUAL_CHATGPT_PREFIX, VISUAL_CHATGPT_FORMAT_INSTRUCTIONS, VISUAL_CHATGPT_SUFFIX
-            place = "Enter text and press enter, or upload an image"
-            label_clear = "Clear"
-        else:
-            PREFIX, FORMAT_INSTRUCTIONS, SUFFIX = VISUAL_CHATGPT_PREFIX_CN, VISUAL_CHATGPT_FORMAT_INSTRUCTIONS_CN, VISUAL_CHATGPT_SUFFIX_CN
-            place = "输入文字并回车，或者上传图片"
-            label_clear = "清除"
+        PREFIX, FORMAT_INSTRUCTIONS, SUFFIX = VISUAL_CHATGPT_PREFIX, VISUAL_CHATGPT_FORMAT_INSTRUCTIONS, VISUAL_CHATGPT_SUFFIX
+        place = "Enter text and press enter, or upload an image"
+        label_clear = "Clear"
         self.agent = initialize_agent(
             self.tools,
             self.llm,
@@ -915,12 +910,8 @@ class ConversationBot:
         img.save(image_filename, "PNG")
         print(f"Resize image form {width}x{height} to {width_new}x{height_new}")
         description = self.models['ImageCaptioning'].inference(image_filename)
-        if lang == 'Chinese':
-            Human_prompt = f'\nHuman: 提供一张名为 {image_filename}的图片。它的描述是: {description}。 这些信息帮助你理解这个图像，但是你应该使用工具来完成下面的任务，而不是直接从我的描述中想象。 如果你明白了, 说 \"收到\". \n'
-            AI_prompt = "收到。  "
-        else:
-            Human_prompt = f'\nHuman: provide a figure named {image_filename}. The description is: {description}. This information helps you to understand this image, but you should use tools to finish following tasks, rather than directly imagine from my description. If you understand, say \"Received\". \n'
-            AI_prompt = "Received.  "
+        Human_prompt = f'\nHuman: provide a figure named {image_filename}. The description is: {description}. This information helps you to understand this image, but you should use tools to finish following tasks, rather than directly imagine from my description. If you understand, say \"Received\". \n'
+        AI_prompt = "Received.  "
         self.agent.memory.save_context({"input": Human_prompt}, {"output": AI_prompt})
         state = state + [(f"![](file={image_filename})*{image_filename}*", AI_prompt)]
         print(f"\nProcessed run_image, Input image: {image_filename}\nCurrent state: {state}\n"
